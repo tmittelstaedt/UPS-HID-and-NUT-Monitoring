@@ -6,7 +6,18 @@ Native UPS USB shutdown
 
 Windows, MacOS & Ubuntu Desktop all will autodetect the USB bus on boot looking for a UPS connected via USB.  If the UPS implements the HID Power Devices. Power Device Page (x84) defined by the USB Implementers Forum, Inc. on usb.org, then these OSes will attach drivers to the USB vendor and product ID.
 
-MacOS will then access the USB from its System Preferences -> Energy Saver -> UPS button.  This desktop configuration permits configuration of shutdown options.
+MacOS will then access a detected USB from its System Preferences -> Energy Saver -> UPS button.  This desktop configuration permits configuration of shutdown options.
+
+Windows will access a detected UPS from it's System -> Power & battery (Power & Sleep) Settings.  This driver only pays attention to whether or not the UPS is Online to AC power or On Battery, when On Battery is detected, it can be set to put the machine to sleep after a few minutes.  (effectively it treats the UPS the same as it treats a laptop that is battery) If the UPS reports very low battery a modern Windows OS will transition from S0 (sleep) to S4 (hibernate)
+
+Ubuntu Desktop will check the /etc/UPower/UPower.conf.d/ directory for a configuration snippit that can be configured to shut the system down when it goes on UPS.
+
+There are two problems with these vendor-included UPS monitoring schemes:
+
+1.  Some vendors do not implement data properly according to the HID Power Devices Power Device Page, as a result unless the operating system vendor has put code specifically in for those UPSes they will report missing, partial, or incorrect data.  Minuteman, Triplite & Cyberpower UPSes have all been reported to have problems or work on some versions of MacOS and not later versions and so on.
+2.  These vendor-supplied programs have no way of distributing UPS status to other computers, so for large UPSes that have many computers plugged into them, only 1 computer will be able to monitor the UPS and shut down.
+
+This is why the 2 major UPS monitoring software packages,  NUT and apcupsd, were written.
 
 Many also offer a JSON server mode where UPS status of the connected UPS is made available over the network in a read-only manner
 
