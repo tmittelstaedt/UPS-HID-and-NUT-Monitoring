@@ -1,10 +1,18 @@
-This Repository contains a mix of Python scripts written for MacOS, Python scripts written for Ubuntu Desktop and Ubuntu Server, and Powershell scripts written for Windows.  There are three sets of scripts here.
+This Repository contains a mix of Python scripts written for MacOS, Python scripts written for Ubuntu Desktop and Ubuntu Server, and Powershell scripts written for Windows.  There are multiple sets of scripts here.
 
-The first set is for monitoring UPS devices that are plugged into these operating systems via USB and they extend the basic monitoring supplied by the operating system as well as offer shutdown if the UPS goes on battery.  Many also offer a JSON server mode where UPS status of the connected UPS is made available over the network in a read-only manner
+The first set is for monitoring UPS devices that are plugged into these operating systems via USB and are recognized by the native UPS monitoring of those operating systems, they extend the basic monitoring supplied by the operating system as well as offer shutdown if the UPS goes on battery and the native monitoring does not offer shutdown.
+
+Native UPS USB shutdown
+
+Windows, MacOS & Ubuntu Desktop all will autodetect the USB bus on boot looking for a UPS connected via USB.  If the UPS implements the HID Power Devices. Power Device Page (x84) defined by the USB Implementers Forum, Inc. on usb.org, then these OSes will attach drivers to the USB vendor and product ID.
+
+MacOS will then access the USB from its System Preferences -> Energy Saver -> UPS button.  This desktop configuration permits configuration of shutdown options.
+
+Many also offer a JSON server mode where UPS status of the connected UPS is made available over the network in a read-only manner
 
 The second scripts are NUT (Network UPS Tools) client monitoring scripts, these scripts query a NUT server and can replace programs like WinNUT and shut the system down if the remote NUT server reports the UPS is on battery
 
-The third are JSON client scripts that monitor the JSON servers created by the first group to shut down the device they are on if the JSON server reports the UPS has gone on battery.
+The third are JSON client scripts that monitor the JSON servers created by the first group to shut down the device they are on, if the JSON server reports the UPS has gone on battery.
 
 There are also 2 "bridge" scripts that run on either an apcupsd or NUT server and create a JSON server that reports UPS status read only.  The purpose of these are to allow queries from the JSON client scripts if the user has an operating system that cannot run any of the NUT or APCupsd client scripts and just wants to make a simple JSON query.
 
