@@ -78,7 +78,51 @@ The <strong>UPS Monitor PowerShell Script</strong> is a Windows-based utility th
 .\UPSMonitor.ps1
 </code></pre>
 
+<h3>or</h3>
+<p>To run the script without changing your system-wide execution policy and keep it running in the background:</p>
+<pre><code>powershell -ExecutionPolicy Bypass -WindowStyle Hidden -File "C:\Path\To\Monitor-UPS.ps1" -NutServer "192.168.1.50" -UpsName "myups"
+</code></pre>
+
+<h3>or</h3>
+
+<h3>Run in Tray Mode Only</h3>
+<pre><code>.\Monitor-UPS.ps1</code></pre>
+<p>Displays UPS status in the system tray. No network access is provided.</p>
+
+<h3>Run in Tray + TCP Server Mode</h3>
+<pre><code>.\Monitor-UPS.ps1 --Server</code></pre>
+<p>Displays UPS status in the system tray and opens a TCP listener on <strong>port 50000</strong> (unreserved high port). Allows remote clients to connect and retrieve UPS status in JSON format.</p>
+
+
+<p><strong>Parameters:</strong></p>
+<ul>
+    <li><code>-NutServer "&lt;IP or hostname&gt;"</code> → IP or hostname of the NUT server</li>
+    <li><code>-UpsName "&lt;UPS name&gt;"</code> → UPS name configured on the NUT server</li>
+    <li><code>-Server</code> → (Optional) Enable JSON TCP server (local UPS mode only)</li>
+</ul>
+
+<p><strong>Examples:</strong></p>
+<p><em>NUT mode:</em></p>
+<pre><code>powershell -ExecutionPolicy Bypass -WindowStyle Hidden -File "C:\Scripts\Monitor-UPS.ps1" -NutServer "172.16.16.20" -UpsName "localups"
+</code></pre>
+
+<p><em>Local UPS mode with JSON server:</em></p>
+<pre><code>powershell -ExecutionPolicy Bypass -WindowStyle Hidden -File "C:\Scripts\Monitor-UPS.ps1" -Server
+</code></pre>
+
+<h2>TCP Server Details</h2>
+<ul>
+    <li><strong>Port:</strong> 50000 (can be changed in the script).</li>
+    <li><strong>Protocol:</strong> TCP (plain text JSON over UTF-8).</li>
+    <li><strong>Connection Model:</strong> One-shot — client connects, receives one JSON object, then connection closes.</li>
+    <li><strong>Security:</strong> No authentication. Intended for trusted LAN environments only.</li>
+</ul>
+
+
 <h2>7. Example TCP JSON Output</h2>
+<p>When <code>-Server</code> is used in <strong>local UPS mode</strong>, the script starts a TCP listener on <strong>port 50000</strong>.  
+Any TCP client can connect and receive a single JSON object with the current UPS status.</p>
+
 <pre><code>{
   "UPSName": "Local UPS",
   "Status": "Online",
@@ -90,6 +134,40 @@ The <strong>UPS Monitor PowerShell Script</strong> is a Windows-based utility th
 }
 </code></pre>
 
+<h3>Field Descriptions</h3>
+<table>
+<tr><th>Field</th><th>Type</th><th>Description</th></tr>
+<tr><td><code>UPSName</code></td><td>String</td><td>Friendly name of the UPS (mapped from VendorID/ProductID if known).</td></tr>
+<tr><td><code>Status</code></td><td>String</td><td><code>"Online"</code>, <code>"On Battery"</code>, or <code>"Unknown"</code>.</td></tr>
+<tr><td><code>BatteryPercent</code></td><td>Integer or null</td><td>Battery charge percentage (0–100). <code>null</code> if unknown.</td></tr>
+<tr><td><code>TimestampUTC</code></td><td>String</td><td>ISO 8601 UTC timestamp when the reading was taken.</td></tr>
+</table>
+
+<h2>Example Client Queries</h2>
+
+<h3>Using PowerShell</h3>
+<pre><code>$tcpClient = New-Object System.Net.Sockets.TcpClient("192.168.1.50", 50000)
+$stream = $tcpClient.GetStream()
+$reader = New-Object System.IO.StreamReader($stream)
+$json = $reader.ReadToEnd()
+$tcpClient.Close()
+
+$data = $json | ConvertFrom-Json
+$data</code></pre>
+
+<h3>Using Netcat</h3>
+<pre><code>nc 192.168.1.50 50000</code></pre>
+
+<h2>Shutdown Delay Behavior</h2>
+<ul>
+    <li>If AC power is lost (<code>Status = "On Battery"</code>), the script starts a <strong>5-minute countdown</strong>.</li>
+    <li>If AC power returns before the countdown ends, shutdown is canceled.</li>
+    <li>If AC power remains offline for the full 5 minutes, the script issues:
+        <pre><code>Stop-Computer -Force</code></pre>
+        (Requires administrator privileges.)
+    </li>
+</ul>
+
 <h2>8. Troubleshooting</h2>
 <table>
 <tr><th>Issue</th><th>Possible Cause</th><th>Solution</th></tr>
@@ -99,14 +177,22 @@ The <strong>UPS Monitor PowerShell Script</strong> is a Windows-based utility th
 <tr><td>NUT server query fails</td><td>Wrong IP/UPS name</td><td>Verify <code>$NutServer</code> and <code>$UpsName</code> values.</td></tr>
 </table>
 
-<h2>9. Safety Notes</h2>
+<h2>9. Notes</h2>
+<ul>
+    <li>Requires <strong>PowerShell 5.1 or later</strong>.</li>
+    <li>In NUT mode, ensure TCP port <strong>3493</strong> is open between the client and server.</li>
+    <li>The JSON TCP server is <strong>only available in local UPS mode</strong>.</li>
+    <li>The tray icon updates every <strong>5 seconds</strong> (configurable in <code>$timer.Interval</code>).</li>
+</ul>
+
+<h2>10. Safety Notes</h2>
 <ul>
     <li>Test without shutdown enabled before production use.</li>
     <li>Set <code>$shutdownDelaySeconds</code> appropriately to avoid accidental shutdowns.</li>
     <li>Secure TCP port with firewall rules if enabled.</li>
 </ul>
 
-<h2>10. License</h2>
+<h2>11. License</h2>
 <p>
 This script is provided <strong>as-is</strong> without any warranty, express or implied.  
 You may modify and redistribute it for personal or organizational use, provided that:
@@ -117,14 +203,14 @@ You may modify and redistribute it for personal or organizational use, provided 
     <li>Any modifications are clearly documented.</li>
 </ul>
 
-<h2>11. Change Log</h2>
+<h2>12. Change Log</h2>
 <table>
 <tr><th>Date</th><th>Version</th><th>Changes</th></tr>
 <tr><td>2026-08-21</td><td>1.0</td><td>Initial release of reconstructed UPS Monitor script.</td></tr>
 <tr><td>2026-08-21</td><td>1.1</td><td>Added HTML documentation and improved error handling.</td></tr>
 </table>
 
-<h2>12. Contact & Support</h2>
+<h2>13. Contact & Support</h2>
 <p>
 For questions, bug reports, or feature requests, you can:
 </p>
@@ -134,13 +220,13 @@ For questions, bug reports, or feature requests, you can:
     <li>Consult the Network UPS Tools (NUT) documentation if using a NUT server.</li>
 </ul>
 
-<h2>13. Appendix – Script Code</h2>
+<h2>14. Appendix – Script Code</h2>
 <p>
 Below is the complete PowerShell script for reference.  
 Copy and save it as <code>UPSMonitor.ps1</code> to run it.
 </p>
 <pre><code>
-# (Insert the full reconstructed UPSMonitor.ps1 script here)
+# for future use (Insert the full reconstructed UPSMonitor.ps1 script here)
 </code></pre>
 
 </body>
