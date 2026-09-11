@@ -10,7 +10,7 @@ Windows will access a detected UPS from it's System -> Power & battery (Power & 
 
 Ubuntu Desktop will check the /etc/UPower/UPower.conf.d/ directory for a configuration snippit that can be configured to shut the system down when it goes on UPS.
 
-There are three problems with these vendor-included UPS monitoring schemes:
+There are three problems with these OS vendor-included UPS monitoring schemes:
 
 1.  Some vendors do not implement data properly according to the HID Power Devices Power Device Page, as a result unless the operating system vendor has put code specifically in for those UPSes they will report missing, partial, or incorrect data.  Minuteman, Triplite & Cyberpower UPSes have all been reported to have problems or work on some versions of MacOS and not later versions and so on.
 2.  These vendor-supplied programs have no way of distributing UPS status to other computers, so for large UPSes that have many computers plugged into them, only 1 computer will be able to monitor the UPS and shut down.
