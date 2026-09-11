@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Shutdown-Monitor.ps1 — README</title>
+<style>
+    body { font-family: Arial, sans-serif; line-height: 1.5; margin: 20px; }
+    h1, h2, h3 { color: #2E3B4E; }
+    code { background-color: #f4f4f4; padding: 2px 4px; border-radius: 4px; }
+    pre { background-color: #f4f4f4; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background-color: #f0f0f0; }
+</style>
+</head>
+<body>
+
+<h1>Shutdown-Monitor.ps1 — README</h1>
+
+<h2>Overview</h2>
+<p>
+<code>Shutdown-Monitor.ps1</code> is a PowerShell script designed to run on a <strong>second machine</strong> that is powered by the same UPS as a <strong>first machine</strong> running <code>Monitor-UPS.ps1 --Server</code>.
+</p>
+<p>
+It connects to the UPS monitor server over TCP, retrieves <strong>JSON status</strong>, and:
+</p>
+<ul>
+    <li>Detects when AC power is lost (<code>Status = "On Battery"</code>).</li>
+    <li>Starts a <strong>shutdown countdown</strong> (default 5 minutes).</li>
+    <li>Cancels shutdown if AC power returns before countdown ends.</li>
+    <li>Initiates shutdown if countdown expires.</li>
+    <li>Optionally logs power events and shutdown actions to <code>C:\UPS\shutdown-monitor.log</code>.</li>
+</ul>
+
+<h2>Features</h2>
+<ul>
+    <li>Monitors UPS status remotely via TCP.</li>
+    <li>Configurable check interval and shutdown delay.</li>
+    <li>Optional logging of power events.</li>
+    <li>Can run interactively or in the background.</li>
+</ul>
+
+<h2>Parameters</h2>
+<table>
+<tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>-ServerIP</code></td><td>String</td><td>"192.168.1.50"</td><td>IP address of the first machine running <code>Monitor-UPS.ps1 --Server</code>.</td></tr>
+<tr><td><code>-Port</code></td><td>Integer</td><td>50000</td><td>TCP port of the UPS monitor server.</td></tr>
+<tr><td><code>-CheckInterval</code></td><td>Integer</td><td>30</td><td>Seconds between status checks.</td></tr>
+<tr><td><code>-ShutdownDelay</code></td><td>Integer</td><td>300</td><td>Seconds to wait before shutdown after going on battery.</td></tr>
+<tr><td><code>-Log</code></td><td>Switch</td><td>(off)</td><td>Enable logging to <code>C:\UPS\shutdown-monitor.log</code>.</td></tr>
+</table>
+
+<h2>Logging</h2>
+<p>When <code>-Log</code> is specified:</p>
+<ul>
+    <li>Creates <code>C:\UPS</code> folder if missing.</li>
+    <li>Creates <code>shutdown-monitor.log</code> if missing.</li>
+    <li>Writes timestamped entries when:
+        <ul>
+            <li>Power failure is detected.</li>
+            <li>Shutdown is initiated.</li>
+            <li>Shutdown is canceled.</li>
+        </ul>
+    </li>
+</ul>
+<p><strong>Example log entries:</strong></p>
+<pre><code>2026-08-16 15:02:10 Power failure detected. Shutdown scheduled in 300 seconds unless power returns.
+2026-08-16 15:07:15 Shutdown initiated after 300 seconds on battery.
+</code></pre>
+
+<h2>Usage Examples</h2>
+
+<h3>1. Start in Interactive Mode</h3>
+<p>Runs in the current PowerShell window and displays status messages.</p>
+<pre><code>.\Shutdown-Monitor.ps1 -ServerIP "192.168.1.50" -Port 50000 -CheckInterval 30 -ShutdownDelay 300 -Log
+</code></pre>
+
+<h3>2. Start in Background (Detached)</h3>
+<p>Runs without tying up your current PowerShell session.</p>
+<pre><code>Start-Job -ScriptBlock {
+    & "C:\Path\To\Shutdown-Monitor.ps1" -ServerIP "192.168.1.50" -Port 50000 -CheckInterval 30 -ShutdownDelay 300 -Log
+}
+</code></pre>
+<p>
+The job will keep running until the session ends or the job is stopped.
+</p>
+<p>To see running jobs:</p>
+<pre><code>Get-Job</code></pre>
+<p>To stop a job:</p>
+<pre><code>Stop-Job -Id &lt;JobId&gt;</code></pre>
+
+<h3>3. Start as a Scheduled Task (Recommended for Always-On Monitoring)</h3>
+<ol>
+    <li>Open <strong>Task Scheduler</strong>.</li>
+    <li>Create a new task:
+        <ul>
+            <li><strong>Trigger</strong>: At startup or at logon.</li>
+            <li><strong>Action</strong>:
+                <pre><code>powershell.exe -ExecutionPolicy Bypass -File "C:\Path\To\Shutdown-Monitor.ps1" -ServerIP "192.168.1.50" -Port 50000 -CheckInterval 30 -ShutdownDelay 300 -Log
+</code></pre>
+            </li>
+            <li><strong>Run with highest privileges</strong> (required for shutdown).</li>
+        </ul>
+    </li>
+    <li>Save and enable the task.</li>
+</ol>
+
+<h2>Shutdown Logic</h2>
+<ol>
+    <li>If <code>Status = "On Battery"</code>:
+        <ul>
+            <li>Start countdown (<code>ShutdownDelay</code> seconds).</li>
+            <li>If AC returns before countdown ends → cancel shutdown.</li>
+            <li>If countdown expires → run:
+                <pre><code>Stop-Computer -Force</code></pre>
+            </li>
+        </ul>
+    </li>
+    <li>If <code>Status = "Online"</code>:
+        <ul>
+            <li>Cancel any pending shutdown.</li>
+        </ul>
+    </li>
+</ol>
+
+<h2>Requirements</h2>
+<ul>
+    <li>Windows with PowerShell 5.1 or later.</li>
