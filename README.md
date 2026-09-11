@@ -74,6 +74,18 @@ Shutdown-Monitor.ps1  PowerShell script designed to run on a second machine that
 
 Shutdown-MonitorREADME.html  Documentation for Shutdown-Monitor.ps1
 
+apc_ups_monitor-README.html   Documentation for apc_ups_monitor.py
+
+apc_ups_monitor.py  This Python 3 script monitors an APC UPS via /usr/sbin/apcaccess and integrates with the GNOME desktop. It displays a top-bar AppIndicator icon that changes color based on UPS status, flashes red when on battery, and provides a dropdown menu with live UPS stats. 
+
+icon_green.png  icon for apc_ups_monitor.py
+
+icon_grey.png  icon for apc_ups_monitor.py
+
+icon_red.png  icon for apc_ups_monitor.py
+
+icon_red_flash.png  icon for apc_ups_monitor.py
+
 query-apc-on-usb.py Diagnostic program to see if a USB-connected UPS is compatible with Monitor-UPS.ps1. For Macintosh
 
 query-apc-on-usb.py.README   Documentation for query-apc-on-usb.py
