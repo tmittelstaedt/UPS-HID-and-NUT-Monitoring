@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=UPS Monitor
+Comment=Monitor APC UPS status and show GNOME top-bar icon
+Exec=python3 /home/tedm/local-programs/apc_ups_monitor.py &
+Icon=/home/tedm/local-programs/icon_green.png
+Terminal=false
+Categories=Utility;
+StartupNotify=false
