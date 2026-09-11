@@ -16,7 +16,7 @@ There are three problems with these OS vendor-included UPS monitoring schemes:
 2.  These vendor-supplied programs have no way of distributing UPS status to other computers, so for large UPSes that have many computers plugged into them, only 1 computer will be able to monitor the UPS and shut down.
 3.  Some of the operating systems are very hostile to users attempting to block the OS's drivers from attaching to a UPS, even one that it does not properly interpret output from.
 
-This is why the 2 major UPS monitoring software packages,  NUT and apcupsd, were written.  
+This is why the 2 major UPS monitoring software packages,  NUT and apcupsd, are used.  (these packages were written long before OS vendors started including rudimentary OS support).  
 
 NUT and apcupsd take different approaches to the problem of #1.  NUT has wide support for many different models of UPS while apcupsd has concentrated on supporting only APC's UPS products.
 
