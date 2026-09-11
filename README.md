@@ -48,27 +48,38 @@ Network parameters available via the JSON servers are simple, just enough to ena
 
 The following files are contained here:
 
-simple-ups-server.py    Python server that queries a USB connected UPS for status and makes that status available via a JSON query.  For Macintosh
+GetUPSStatusNUT.py Desktop program for the iMac that creates an icon on an Apple Macintosh desktop that the user can click on and get status of a UPS on a NUT server and will shut down the iMac if the NUT UPS goes on battery. This is a NUT client. For Macintosh
 
-Shutdown-Monitor-Mac.py   Desktop cient program that queries a JSON server for UPS status and shuts the system down if the UPS loses AC power.  For Macintosh
+GetUPSStatusNUT.py.README.html documentation for GetUPSStatusNUT.py
 
-query-apc-on-usb.py    Diagnostic program to see if a USB-connected UPS is compatible with Monitor-UPS.ps1.  For Macintosh
+Monitor-UPS-README.html  Documentation for Monitor-UPS.ps1
 
-ups_monitor.py   Desktop program that creates an icon on a Macintosh desktop the user can click on and get status of the UPS, as well as making a JSON server available. For Macintosh
+Monitor-UPS-ReadInfo.ps1 Command line test diagnostic program that reads a USB-connected UPS to see if it is compatible with Monitor-UPS.ps1. For Windows
 
-GetUPSStatusNUT.py  Desktop program for the iMac that creates an icon on an Apple Macintosh desktop that the user can click on and get status of a UPS on a NUT server and will shut down the iMac if the NUT UPS goes on battery.  This is a NUT client.  For Macintosh
+Monitor-UPS-ReadInfo.ps1.README.txt  Documentation for Monitor-UPS-ReadInfo.ps1
 
-GetUPSStatusNUT.py.README.html  documentation for GetUPSStatusNUT.py
+Monitor-UPS.ps1 Desktop program that creates an icon on a Windows desktop the user can click on and get status of the UPS, as well as making a JSON server available. It can also monitor a remote NUT server and shut down the PC if the UPS goes on battery For Windows
 
-Monitor-UPS.ps1   Desktop program that creates an icon on a Windows desktop the user can click on and get status of the UPS, as well as making a JSON server available.  It can also monitor a remote NUT server and shut down the PC if the UPS goes on battery  For Windows
+README-Ubuntu-UPS_monitor.html HTML documentation for the ubuntu_ups_monitor.py script
 
-Monitor-UPS-ReadInfo.ps1  Command line test diagnostic program that reads a USB-connected UPS to see if it is compatible with Monitor-UPS.ps1.    For Windows
+Shutdown-Monitor-Mac.html  documentation for Shutdown-Monitor-Mac.py
 
-ubuntu_ups_monitor.py  Python script for Ubuntu Desktop that hooks into the upower program that is included in Ubuntu Desktop and provides a JSON server for a USB UPS HID connected UPS, this puts a status indicator icon on the desktop that it is running
+Shutdown-Monitor-Mac.py Desktop cient program that queries a JSON server for UPS status and shuts the system down if the UPS loses AC power. For Macintosh
 
-ubuntu_ups_info.py  Python script for Ubuntu Desktop that queries the upower/dbus program for stats for a USB UPS HID connected UPS, used for testing to see if the attached UPS will work
+query-apc-on-usb.py Diagnostic program to see if a USB-connected UPS is compatible with Monitor-UPS.ps1. For Macintosh
 
-README-Ubuntu-UPS_monitor.html   HTML documentation for the ubuntu_ups_monitor.py script
+query-apc-on-usb.py.README   Documentation for query-apc-on-usb.py
 
-ubuntuREADME-UPS_monitor.txt  textfile that is saved most likely in /root/UPS or other convenient location for use with the desktop icon to provide a readme menu for it
+simple-ups-server.py Python server that queries a USB connected UPS for status and makes that status available via a JSON query. For Macintosh
 
+simple-ups-server.py.README   Documentation for simple-ups-server.py
+
+ubuntuREADME-UPS_monitor.txt textfile that is saved most likely in /root/UPS or other convenient location for use with the desktop icon to provide a readme menu for it
+
+ubuntu_ups_info.py Python script for Ubuntu Desktop that queries the upower/dbus program for stats for a USB UPS HID connected UPS, used for testing to see if the attached UPS will work
+
+ubuntu_ups_monitor.py Python script for Ubuntu Desktop that hooks into the upower program that is included in Ubuntu Desktop and provides a JSON server for a USB UPS HID connected UPS, this puts a status indicator icon on the desktop that it is running
+
+ups_monitor.html  Documentation for ups_monitor.py
+
+ups_monitor.py Desktop program that creates an icon on a Macintosh desktop the user can click on and get status of the UPS, as well as making a JSON server available. For Macintosh
