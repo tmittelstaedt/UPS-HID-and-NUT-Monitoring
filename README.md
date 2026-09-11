@@ -66,6 +66,8 @@ Shutdown-Monitor-Mac.html  documentation for Shutdown-Monitor-Mac.py
 
 Shutdown-Monitor-Mac.py Desktop cient program that queries a JSON server for UPS status and shuts the system down if the UPS loses AC power. For Macintosh
 
+Shutdown-Monitor.ps1  PowerShell script designed to run on a second machine that is powered by the same UPS as a first machine running a JSON server.  For Windows
+
 query-apc-on-usb.py Diagnostic program to see if a USB-connected UPS is compatible with Monitor-UPS.ps1. For Macintosh
 
 query-apc-on-usb.py.README   Documentation for query-apc-on-usb.py
