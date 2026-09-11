@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>UPS Monitor for Ubuntu (GNOME) - README</title>
+<style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; margin: 20px; max-width: 900px; }
+    h1, h2, h3 { color: #2c3e50; }
+    code { background: #f4f4f4; padding: 2px 4px; border-radius: 4px; }
+    pre { background: #f4f4f4; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    ul { margin-left: 20px; }
+    .note { background: #eaf5ff; padding: 10px; border-left: 4px solid #3498db; }
+</style>
+</head>
+<body>
+
+<h1>UPS Monitor for Ubuntu (GNOME)</h1>
+<p>
+This Python 3 script monitors an APC UPS via <code>/usr/sbin/apcaccess</code> and integrates with the GNOME desktop.
+It displays a top-bar AppIndicator icon that changes color based on UPS status, flashes red when on battery, and provides a dropdown menu with live UPS stats.
+Icons are generated with ImageMagick and optionally can include the text <strong>UPS</strong> for clarity.
+</p>
+
+<h2>Features</h2>
+<ul>
+    <li>Runs <code>/usr/sbin/apcaccess</code> every 60 seconds</li>
+    <li>Top-bar icon color:
+        <ul>
+            <li><strong>Green</strong> – UPS online (mains power)</li>
+            <li><strong>Flashing Red</strong> – UPS on battery or low battery (alternates between solid red and transparent red text)</li>
+            <li><strong>Grey</strong> – Unknown status or communication lost</li>
+        </ul>
+    </li>
+    <li>Desktop notifications when status changes</li>
+    <li>Dropdown menu shows:
+        <ul>
+            <li>MODEL</li>
+            <li>LINEV</li>
+            <li>LOADPCT</li>
+            <li>BCHARGE</li>
+            <li>BATTV</li>
+            <li>TIMELEFT</li>
+        </ul>
+    </li>
+    <li>Manual “Refresh Now” option in menu</li>
+    <li>Quit option in menu</li>
+</ul>
+
+<h2>Requirements</h2>
+<p>Install the following packages:</p>
+<pre><code>sudo apt install python3-gi gir1.2-gtk-3.0 gir1.2-appindicator3-0.1 libnotify-bin apcupsd imagemagick</code></pre>
+
+<h2>Installation</h2>
+<ol>
+    <li>Ensure <code>apcupsd</code> is installed and configured so that <code>/usr/sbin/apcaccess</code> works.</li>
+    <li>Place the script <code>apc_ups_monitor.py</code> in your preferred directory.</li>
+    <li>Generate the icons with centered text with ImageMagick:</li>
+</ol>
+
+<pre><code># Green icon (UPS online)
+convert -size 48x48 xc:green \
+    -gravity center \
+    -pointsize 20 \
+    -fill white \
+    -font DejaVu-Sans-Bold \
+    -annotate 0 "UPS" \
+    icon_green.png
+
+# Red icon (UPS on battery)
+convert -size 48x48 xc:red \
+    -gravity center \
+    -pointsize 20 \
+    -fill white \
+    -font DejaVu-Sans-Bold \
+    -annotate 0 "UPS" \
+    icon_red.png
+
+# Grey icon (UPS unknown)
+convert -size 48x48 xc:grey \
+    -gravity center \
+    -pointsize 20 \
+    -fill black \
+    -font DejaVu-Sans-Bold \
+    -annotate 0 "UPS" \
+    icon_grey.png
+
+# Transparent icon with red text (for flashing)
+convert -size 48x48 xc:none \
+    -gravity center \
+    -pointsize 20 \
+    -fill red \
+    -font DejaVu-Sans-Bold \
+    -annotate 0 "UPS" \
+    icon_red_flash.png
+</code></pre>
+
+<h2>Icon Previews</h2>
+<div>
+    <div class="icon-preview">
+        <img src="data:image/png;base64,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" alt="Green UPS Icon">
+        <div>Green (Normal)</div>
+    </div>
+    <div class="icon-preview">
+        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAMAAABg3Am1AAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAEpUExURf8AAP8oKP////+YmP9cXP9oaP/5+f/k5P+xsf9RUf9MTP+wsP/6+v/z8//g4P/Gxv+Wlv9iYv+mpv8CAv+Rkf/8/P/d3f+srP+trf/MzP9kZP86Ov/39//Bwf+ysv/Kyv/q6v+5uf+AgP/29v8dHf8wMP97e/8UFP/S0v9+fv/w8P9FRf/x8f+qqv92dv9HR/8QEP/Ly/+hof85Of8BAf9UVP+4uP/19f9GRv8jI/9lZf/m5v+zs/8EBP8xMf9ra//AwP/ExP8ODv/Cwv+Hh//p6f/V1f/+/v9BQf/9/f8WFv9nZ/+env8DA/8SEv/i4v/Z2f9paf/Q0P/Hx/9wcP/09P+8vP9vb/8TE/9JSf/o6P8FBf88PP+EhP/b2//7+//r6/9ycv8JCaMra0UAAAABYktHRAJmC3xkAAAAB3RJTUUH6gkJBBo16oQpmwAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAyNi0wOS0wOVQwNDoyNjo1MyswMDowMJGWGJgAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMjYtMDktMDlUMDQ6MjY6NTMrMDA6MDDgy6AkAAAAKHRFWHRkYXRlOnRpbWVzdGFtcAAyMDI2LTA5LTA5VDA0OjI2OjUzKzAwOjAwt96B+wAAASVJREFUSMdjYBgFo2AUUAIYmZiYmEEMFiCDFcIHAjZ2Dk6IAi5udh5ePn4BQfwaQEBIGCgsAuOJ4tEgJi4hCVIjxcAgDaRkZOXkFfBqAPGlgLQiA4MSE5OyCkhaVY2ABnUgrcHAoMnEpKVO0NNINmgDKR1dPX0DvBqAfjCE+oHBCOplRWPCoaQLCiUTUzNziBYLiAZLINsIxLACMgThGnisbUxhjrC1s3cACjlCeE5ApjOI4QJkcCHZiAqAwewKZboxMbl7MDCoWDMxeXphaPD28fAFUn7+TEwBUKFAoArPoGCQQ4UYMDSEMDGFBnOE8QJFRaBCJj4wTxoaYGoIhweBWwRcMFKXT4YnStEqmgFTg29MrGycTnyCbGISDXPAKBgFIwMAACZ1G4mOlP91AAAAAElFTkSuQmCC" alt="Red UPS Icon">
+        <div>Red (On Battery)</div>
+    </div>
+    <div class="icon-preview">
+        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwEAAAAAAi+XoYAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAACYktHRP//FKsxzQAAAAd0SU1FB+oJCQQaNeqEKZsAAAAldEVYdGRhdGU6Y3JlYXRlADIwMjYtMDktMDlUMDQ6MjY6NTMrMDA6MDCRlhiYAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDI2LTA5LTA5VDA0OjI2OjUzKzAwOjAw4MugJAAAACh0RVh0ZGF0ZTp0aW1lc3RhbXAAMjAyNi0wOS0wOVQwNDoyNjo1MyswMDowMLfegfsAAAKySURBVFjD7ZZbSFRRFIa/GZ0pVHJEIyovlNOYBZp5gUAdK7vKWNJL0BSj+WBJZoiViEzRg6VEJUkF5oMKQoQlYkyKmhamqKWUmpN2w2sXLUQZQ8cezoyaPWgDBsFZL4u19tn/d/a/zoEtqa5mSUO6tPIiQASIABEgAv4TgD3AJzedH4DG8UyZ0K70z3QFSB6Nbppdt2zJUJSrVHtfht6a7T33eRTYtWYkWxbmHOKaohzw6d8XPQfwdzF56StfX9Szoz39vkQPcDOrxAAMsnMKE0NHO5CG2wRYfXpD8XTEUKvRCFB9KuBHVAu055cYAGSTvvGO24adBhU/ouZZtNgIyhMsLA+86gxQmxgVB02FFIG8stBlZanwXHdHw4B1j01DDu0U8jcNgFQPIMuQV1rXlYNaiU0nsMYzXyG7lhEHmwsBxhqOlAa7+/R5b/RVOplstKg5/sLh6Yiha0ZnoVbn0gKBd3fnVDyE8cxaagFp+FZPXc2mQhssGrhR9/npPeNaq/x+y5dy7oF+KNh9WbpQmeuai5K8m4vmnMDecvma2GWV+hkpZFkG0fMxdlXO4yrVHoW6Hb3QkdSoURdMSd/nvc6vTWz7AOa6gt4g7QxAUW55wxirSH8OYQCKVLpmpWd+REf66PsDbFYWKzmYn5BgNELvoTkWOaR5JQK88myNBfhy4PF3AIneN35h48rGstpaY811QjV6ZSQbwDpoy5BjGq8DbE/Rrz8pr3yXNKEB2O6mSF0YMBFp0BhYXrHuuEuqqb6j2yQHCHn7G0DT9Oa64QxMX+wBD6Gn6kv+iGlhgOQJgKm+U9gnB/BKPOYxxyKQ1Jz1v+ytzl21RTZpV+USFKRNCch1d1qEPMQ03ujRSvx0a4Yd0qTmFeN+uhPn79xeEWJRFq/vIkAEiAARIAL+BeAXAhDZwJt1VFcAAAAASUVORK5CYII=" alt="Grey UPS Icon">
+        <div>Grey (Unknown)</div>
+    </div>
+    <div class="icon-preview">
+        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAMAAABg3Am1AAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAEsUExURQAAAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP8AAP///1+ZApgAAABidFJOUwAomFxo+eSxUUyw+vPgxpZipgKR/N2srcxkOvfBssrquYD2HTB7FNJ+8EXxqnZHEMuhOQFUuPVGI2XmswQxa8DEDsKH6dX+Qf0WZ54DEuLZadDHcPS8bxNJ6AU8hNv763IJ5GGv5QAAAAFiS0dEY1y+LaoAAAAHdElNRQfqCQkEGjXqhCmbAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDI2LTA5LTA5VDA0OjI2OjUzKzAwOjAwkZYYmAAAACV0RVh0ZGF0ZTptb2RpZnkAMjAyNi0wOS0wOVQwNDoyNjo1MyswMDowMODLoCQAAAAodEVYdGRhdGU6dGltZXN0YW1wADIwMjYtMDktMDlUMDQ6MjY6NTMrMDA6MDC33oH7AAABJUlEQVRIx2NgGAWjYBRQAhiTkpKYQAxmIIMFwgcCVjZ2DogCTi42bh5ePn4B/BpAQFAIKCwM44ng0SAqJi4BUiPJwCAFpKRlZOXk8WoA8SWBtAIDg2JSkpIySFpFlYAGNSCtzsCgkZSkqUbQ00g2aAEpbR1dPX28GoB+MID6gcEQ6mUFI8KhpAMKJWMTUzOIFnOIBgsg2xDEsAQyBOAauK2sTWCOsLG1swcKOUB4jkCmE4jhDGRwItmICoDB7AJluiYlubkzMChbJSV5eGJo8PJ29wFSvn5JSf5QoQCgCo/AIJBDBRkwNAQnJYUEsYfyAEWFoULG3jBPGuhjagiDB4FrOFwwQodXmjtSwTKKAVODT3SMTKx2XLxMQiLN0v8oGAUjBQAArFxo3rkjv+UAAAAASUVORK5CYII=" alt="Flashing Red UPS Icon">
+        <div>Transparent Red Text (Flashing)</div>
+    </div>
+</div>
+
+
+<ol start="4">
+    <li>Optionally, generate soild icons with ImageMagick:</li>
+</ol>
+
+    <li>Create three icon files:
+        <ul>
+            <li><code>icon_green.png</code> – Green icon for online</li>
+            <li><code>icon_red.png</code> – Red icon for battery</li>
+            <li><code>icon_red_flash.png</code> – Red/yellow icon for battery flash</li>
+            <li><code>icon_grey.png</code> – Grey icon for unknown</li>
+        </ul>
+        Example using ImageMagick:
+
+<pre><code>
+convert -size 24x24 xc:green icon_green.png
+convert -size 24x24 xc:red icon_red.png
+convert -size 24x24 xc:yellow icon_red_flash.png
+convert -size 24x24 xc:grey icon_grey.png
+</code></pre>
+    </li>
+
+
+<ol start="5">
+    <li>Edit the script to set the correct icon paths:</li>
+</ol>
+
+<pre><code>
+ICON_GREEN      = "/home/username/path/icon_green.png"
+ICON_RED        = "/home/username/path/icon_red.png"
+ICON_GREY       = "/home/username/path/icon_grey.png"
+ICON_RED_FLASH  = "/home/username/path/icon_red_flash.png"
+</code></pre>
+
+<h2>Usage</h2>
+<pre><code>chmod +x apc_ups_monitor.py
+./apc_ups_monitor.py</code></pre>
+<p>
+The icon will appear in the GNOME top bar. Click it to see UPS stats, refresh instantly, or quit.
+</p>
+
+<h2>Behavior</h2>
+<ul>
+    <li>Checks UPS status every 60 seconds automatically</li>
+    <li>Flashes red icon every second when on battery (solid red ↔ transparent red text)</li>
+    <li>Stops flashing when UPS returns to online or unknown state</li>
+    <li>Notifications are sent only when status changes</li>
+</ul>
+
+<h2>Troubleshooting</h2>
+<ul>
+    <li>If the icon does not appear, ensure GNOME’s “AppIndicator Support” extension is enabled.</li>
+    <li>If you see <code>libayatana-appindicator is deprecated</code> warning, it is harmless — GNOME still supports it.</li>
+    <li>If <code>/usr/sbin/apcaccess</code> fails, check that <code>apcupsd</code> is running and configured.</li>
+</ul>
+
+<h2>License</h2>
+<p>
+This script is provided as-is, without warranty. You may modify and redistribute it freely.
+</p>
+
+</body>
+</html>
