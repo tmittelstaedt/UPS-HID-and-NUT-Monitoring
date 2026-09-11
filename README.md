@@ -74,9 +74,11 @@ Shutdown-Monitor.ps1  PowerShell script designed to run on a second machine that
 
 Shutdown-MonitorREADME.html  Documentation for Shutdown-Monitor.ps1
 
+UPSMonitor.desktop  Gnome desktop file needed to create icon to start the apc_ups_monitor program on the Ubuntu desktop
+
 apc_ups_monitor-README.html   Documentation for apc_ups_monitor.py
 
-apc_ups_monitor.py  This Python 3 script monitors an APC UPS via /usr/sbin/apcaccess and integrates with the GNOME desktop. It displays a top-bar AppIndicator icon that changes color based on UPS status, flashes red when on battery, and provides a dropdown menu with live UPS stats. 
+apc_ups_monitor.py  This Python 3 script monitors an APC UPS via /usr/sbin/apcaccess and integrates with the GNOME desktop. It displays a top-bar AppIndicator icon that changes color based on UPS status, flashes red when on battery, and provides a dropdown menu with live UPS stats.  Requires apcupsd to be installed.  For Ubuntu Linux
 
 icon_green.png  icon for apc_ups_monitor.py
 
