@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>UPS Shutdown Monitor — Python Script for Ubuntu</title>
+<style>
+    body { font-family: Arial, sans-serif; line-height: 1.5; margin: 20px; }
+    h1, h2, h3 { color: #2E3B4E; }
+    code { background-color: #f4f4f4; padding: 2px 4px; border-radius: 4px; }
+    pre { background-color: #f4f4f4; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background-color: #f0f0f0; }
+</style>
+</head>
+<body>
+
+<h1>UPS Shutdown Monitor — Python Script for Ubuntu</h1>
+
+<h2>Overview</h2>
+<p>
+This Python script runs on an <strong>Ubuntu system</strong> and monitors a UPS via a TCP connection to a <strong>Windows machine</strong> running:
+</p>
+<pre><code>Monitor-UPS.ps1 --Server</code></pre>
+<p>
+It retrieves UPS status in JSON format and:
+</p>
+<ul>
+    <li>Detects when AC power is lost (<code>Status = "On Battery"</code>).</li>
+    <li>Starts a <strong>5‑minute shutdown countdown</strong>.</li>
+    <li>Cancels shutdown if AC power returns before countdown ends.</li>
+    <li>Initiates shutdown if countdown expires.</li>
+    <li>Optionally logs events to <code>/var/log/ups-shutdown-monitor.log</code>.</li>
+</ul>
+
+<h2>Features</h2>
+<ul>
+    <li>Monitors UPS status remotely over TCP.</li>
+    <li>Configurable check interval and shutdown delay.</li>
+    <li>Optional logging of power events.</li>
+    <li>Can run manually, in the background, or as a systemd service.</li>
+</ul>
+
+<h2>Requirements</h2>
+<ul>
+    <li>Ubuntu (or other Linux with Python 3 installed).</li>
+    <li>Root privileges for shutdown.</li>
+    <li>Network access to the Windows UPS monitor server.</li>
+    <li>Python 3.6+.</li>
+</ul>
+
+<h2>Script Configuration</h2>
+<p>At the top of the script, you can adjust:</p>
+<table>
+<tr><th>Variable</th><th>Default Value</th><th>Description</th></tr>
+<tr><td><code>SERVER_IP</code></td><td>"192.168.1.50"</td><td>IP of the Windows UPS monitor server.</td></tr>
+<tr><td><code>SERVER_PORT</code></td><td>50000</td><td>TCP port of the UPS monitor server.</td></tr>
+<tr><td><code>CHECK_INTERVAL</code></td><td>30</td><td>Seconds between status checks.</td></tr>
+<tr><td><code>SHUTDOWN_DELAY</code></td><td>300</td><td>Seconds to wait before shutdown after going on battery.</td></tr>
+<tr><td><code>ENABLE_LOG</code></td><td>True</td><td>Enable/disable logging.</td></tr>
+<tr><td><code>LOG_FILE</code></td><td>"/var/log/ups-shutdown-monitor.log"</td><td>Path to log file.</td></tr>
+</table>
+
+<h2>Installation Steps</h2>
+
+<h3>1. Save the Script</h3>
+<pre><code>nano shutdown_monitor.py</code></pre>
+<p>Paste the Python code, then save and exit.</p>
+
+<h3>2. Make it Executable</h3>
+<pre><code>chmod +x shutdown_monitor.py</code></pre>
+
+<h3>3. Run Manually</h3>
+<pre><code>sudo ./shutdown_monitor.py</code></pre>
+<p>(Use <code>sudo</code> to allow shutdown and log writing to <code>/var/log</code>.)</p>
+
+<h3>4. Run in Background</h3>
+<pre><code>nohup sudo ./shutdown_monitor.py &amp;</code></pre>
+<ul>
+    <li><code>nohup</code> allows the script to keep running after you log out.</li>
+    <li>The <code>&amp;</code> runs it in the background.</li>
+</ul>
+
+<h3>5. Run at Startup (systemd Service)</h3>
+<p>Create a systemd service file:</p>
+<pre><code>sudo nano /etc/systemd/system/ups-shutdown-monitor.service</code></pre>
+<p>Add:</p>
+<pre><code>[Unit]
+Description=UPS Shutdown Monitor
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 /path/to/shutdown_monitor.py
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target
+</code></pre>
+<p>Replace <code>/path/to/shutdown_monitor.py</code> with the actual script path.</p>
+
+<p>Enable and start the service:</p>
+<pre><code>sudo systemctl daemon-reload
+sudo systemctl enable ups-shutdown-monitor
+sudo systemctl start ups-shutdown-monitor
+</code></pre>
+
+<h2>Logging</h2>
+<p>If <code>ENABLE_LOG = True</code>:</p>
+<ul>
+    <li>The script writes to <code>/var/log/ups-shutdown-monitor.log</code>.</li>
+    <li>Example log entries:</li>
+</ul>
+<pre><code>2026-08-16 15:02:10 Power failure detected. Shutdown scheduled in 300 seconds unless power returns.
+2026-08-16 15:07:15 Shutdown initiated after 300 seconds on battery.
+</code></pre>
+
+<h2>Shutdown Logic</h2>
+<ol>
+    <li>If <code>Status = "On Battery"</code>:
+        <ul>
+            <li>Start countdown (<code>SHUTDOWN_DELAY</code> seconds).</li>
+            <li>If AC returns before countdown ends → cancel shutdown.</li>
+            <li>If countdown expires → run:
+                <pre><code>sudo shutdown -h now</code></pre>
+            </li>
+        </ul>
+    </li>
+    <li>If <code>Status = "Online"</code>:
+        <ul>
+            <li>Cancel any pending shutdown.</li>
+        </ul>
+    </li>
+</ol>
+
+<h2>Security Notes</h2>
+<ul>
+    <li>No authentication is used — only run on trusted LANs.</li>
+    <li>If exposing to the internet, use a firewall or VPN to restrict access.</li>
+    <li>Ensure only trusted users can modify the script or service file.</li>
+</ul>
+
+</body>
+</html>
