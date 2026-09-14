@@ -48,6 +48,10 @@ Network parameters available via the JSON servers are simple, just enough to ena
 
 The following files are contained here:
 
+GetUPSStatusNUT.ps1  PowerShell script for Windows that connects to a NUT server and retrieves status for a UPS on the NUT server
+
+GetUPSStatusNUT.ps1.README.html   Documentation for the GetUPSStatusNUT.ps1 script
+
 GetUPSStatusNUT.py Desktop program for the iMac that creates an icon on an Apple Macintosh desktop that the user can click on and get status of a UPS on a NUT server and will shut down the iMac if the NUT UPS goes on battery. This is a NUT client. For Macintosh
 
 GetUPSStatusNUT.py.README.html documentation for GetUPSStatusNUT.py
