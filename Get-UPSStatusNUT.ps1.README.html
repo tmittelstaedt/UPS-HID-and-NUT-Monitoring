@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Using PowerShell to Query a NUT Server</title>
+<style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; margin: 20px; background-color: #f9f9f9; }
+    h1, h2, h3 { color: #2c3e50; }
+    code, pre { background-color: #eee; padding: 4px; border-radius: 4px; }
+    pre { padding: 10px; overflow-x: auto; }
+    table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background-color: #f0f0f0; }
+    .note { background-color: #e8f4fd; padding: 10px; border-left: 4px solid #3498db; }
+</style>
+</head>
+<body>
+
+<h1>📄 Using PowerShell to Query a NUT Server</h1>
+
+<h2>1. Overview</h2>
+<p>
+This guide explains how to:
+</p>
+<ul>
+    <li>Configure a <strong>Network UPS Tools (NUT)</strong> server to allow remote access.</li>
+    <li>Use a <strong>PowerShell script</strong> to connect to the NUT server and retrieve UPS status.</li>
+    <li>Parse UPS variables into a structured format for monitoring.</li>
+</ul>
+<p>
+The script uses the NUT TCP protocol (<code>upsd</code>) on <strong>port 3493</strong> to send commands like <code>LIST VAR &lt;upsname&gt;</code> and read the results.
+</p>
+
+<h2>2. NUT Server Configuration</h2>
+
+<h3>2.1 Install NUT (Linux Example)</h3>
+<pre><code># Debian/Ubuntu
+sudo apt update
+sudo apt install nut-server nut-client
+
+# RHEL/CentOS
+sudo dnf install nut
+</code></pre>
+
+<h3>2.2 Configure UPS in <code>ups.conf</code></h3>
+<pre><code>[localups]
+    driver = usbhid-ups
+    port = auto
+    desc = "My UPS"
+</code></pre>
+
+<h3>2.3 Configure Access in <code>upsd.conf</code></h3>
+<pre><code>LISTEN 0.0.0.0 3493
+LISTEN :: 3493
+
+ACL myclient 192.168.1.0/24
+ACCEPT myclient
+REJECT all
+</code></pre>
+
+<h3>2.4 Configure Users in <code>upsd.users</code></h3>
+<pre><code>[monuser]
+    password = mypass
+    upsmon master
+</code></pre>
+
+<h3>2.5 Restart NUT</h3>
+<pre><code>sudo systemctl enable nut-server
+sudo systemctl restart nut-server
+</code></pre>
+
+<h3>2.6 Test Locally</h3>
+<pre><code>upsc localups@localhost</code></pre>
+
+<h2>3. PowerShell Script</h2>
+<p>Save as <code>Get-UPSStatusNUT.ps1</code>:</p>
+<pre><code class="language-powershell">param (
+    [string]$NutServer = "192.168.1.100",
+    [string]$UpsName = "localups",
+    [int]$Port = 3493,
+    [int]$TimeoutSeconds = 5,
+    [string]$Username = "monuser",
+    [string]$Password = "mypass"
+)
+
+try {
+    $client = New-Object System.Net.Sockets.TcpClient
+    $client.ReceiveTimeout = $TimeoutSeconds * 1000
+    $client.SendTimeout = $TimeoutSeconds * 1000
+    $client.Connect($NutServer, $Port)
+
+    $stream = $client.GetStream()
+    $reader = New-Object System.IO.StreamReader($stream)
+    $writer = New-Object System.IO.StreamWriter($stream)
+    $writer.AutoFlush = $true
+
+    Write-Host "Connected to NUT server $NutServer on port $Port"
+
+    if ($Username -and $Password) {
+        $writer.WriteLine("USERNAME $Username")
+        $writer.WriteLine("PASSWORD $Password")
+        Start-Sleep -Milliseconds 200
+    }
+
+    $writer.WriteLine("LIST VAR $UpsName")
+    Start-Sleep -Milliseconds 200
+
+    $vars = @{}
+    while ($stream.DataAvailable) {
+        $line = $reader.ReadLine()
+        if ($line -match '^VAR\s+\S+\s+(\S+)\s+"(.*)"$') {
+            $vars[$matches[1]] = $matches[2]
+        }
+    }
+
+    $upsStatus = [PSCustomObject]$vars
+
+    Write-Host "`nUPS Status Object:" -ForegroundColor Cyan
+    $upsStatus | Format-List
+
+    Write-Host "`nBattery Charge: $($upsStatus.'battery.charge')%"
+    Write-Host "UPS Status: $($upsStatus.'ups.status')"
+
+    $writer.Close()
+    $reader.Close()
+    $client.Close()
+}
+catch {
+    Write-Error "Failed to connect or retrieve data: $_"
+}
+</code></pre>
+
+<h2>4. Running the Script</h2>
+<pre><code>powershell -ExecutionPolicy Bypass -File .\Get-UPSStatusNUT.ps1 `
+    -NutServer "192.168.1.100" `
+    -UpsName "localups" `
+    -Username "monuser" `
+    -Password "mypass"
+</code></pre>
+
+<h2>5. Example Output</h2>
+<pre><code>Connected to NUT server 192.168.1.100 on port 3493
+
+UPS Status Object:
+
+battery.charge           : 100
+battery.runtime          : 2237
+device.mfr               : Minuteman
+device.model             : MINUTEMAN UPS
+ups.status               : OL
+
+Battery Charge: 100%
+UPS Status: OL
+</code></pre>
+
+<h2>6. Troubleshooting</h2>
+<table>
+<tr><th>Problem</th><th>Cause</th><th>Fix</th></tr>
+<tr><td>No UPS devices found</td><td><code>LIST UPS</code> disabled or IP not allowed</td><td>Use known UPS name and update <code>upsd.conf</code> ACL</td></tr>
+<tr><td>Connection refused</td><td>NUT server not listening on external IP</td><td>Add <code>LISTEN 0.0.0.0 3493</code> to <code>upsd.conf</code></td></tr>
+<tr><td>Access denied</td><td>Missing or wrong credentials</td><td>Update <code>upsd.users</code> and script parameters</td></tr>
+<tr><td>Script hangs</td><td>Firewall blocking port 3493</td><td>Allow TCP 3493 on server firewall</td></tr>
+</table>
+
+<h2>7. Security Considerations</h2>
+<ul>
+    <li>Restrict NUT server access to trusted IP ranges in <code>upsd.conf</code>.</li>
+    <li>Always use a dedicated NUT user account with minimal privileges.</li>
+    <li>Do not expose port 3493 to the public internet without a VPN or firewall rules.</li>
+    <li>Store credentials securely — avoid hardcoding passwords in scripts if possible.</li>
+</ul>
+
+<h2>8. Optional: Logging UPS Data</h2>
+<p>You can log UPS status to a CSV file for historical tracking:</p>
+<pre><code class="language-powershell">$upsStatus | Export-Csv -Path "UPS_Log.csv" -Append -NoTypeInformation</code></pre>
+<p>This allows you to graph battery charge, runtime, and other metrics over time.</p>
+
+<h2>9. Optional: Alerting on Low Battery</h2>
+<p>Example snippet to send an alert if battery charge drops below 30%:</p>
+<pre><code class="language-powershell">if ([int]$upsStatus.'battery.charge' -lt 30) {
+    Write-Warning "Battery charge is below 30%!"
+    # Example: Send email (requires configured SMTP)
+    Send-MailMessage -To "admin@example.com" -From "ups-monitor@example.com" `
+        -Subject "UPS Low Battery Alert" `
+        -Body "Battery charge is $($upsStatus.'battery.charge')%" `
+        -SmtpServer "mail.example.com"
+}</code></pre>
+
+<h2>10. References</h2>
+<ul>
+    <li><a href="https://networkupstools.org/docs/man/upsd.conf.html" target="_blank">NUT upsd.conf Manual</a></li>
+    <li><a href="https://networkupstools.org/docs/man/ups.conf.html" target="_blank">NUT ups.conf Manual</a></li>
+    <li><a href="https://networkupstools.org/docs/man/upsc.html" target="_blank">NUT upsc Command</a></li>
+</ul>
+
+<hr>
+<p><em>Document Version: 1.0 — Generated for NUT + PowerShell UPS Monitoring</em></p>
+
+</body>
+</html>
