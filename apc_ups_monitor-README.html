@@ -48,7 +48,7 @@ Icons are generated with ImageMagick and optionally can include the text <strong
 
 <h2>Requirements</h2>
 <p>Install the following packages:</p>
-<pre><code>sudo apt install python3-gi gir1.2-gtk-3.0 gir1.2-appindicator3-0.1 libnotify-bin apcupsd imagemagick</code></pre>
+<pre><code>sudo apt install python3-gi gir1.2-gtk-3.0 gir1.2-appindicator3-0.1 dbus-x11 libnotify-bin apcupsd imagemagick</code></pre>
 
 <h2>Installation</h2>
 <ol>
@@ -126,7 +126,7 @@ convert -size 48x48 xc:none \
             <li><code>icon_red_flash.png</code> – Red/yellow icon for battery flash</li>
             <li><code>icon_grey.png</code> – Grey icon for unknown</li>
         </ul>
-        Example using ImageMagick:
+        Example of solid icon generation using ImageMagick:
 
 <pre><code>
 convert -size 24x24 xc:green icon_green.png
@@ -138,7 +138,7 @@ convert -size 24x24 xc:grey icon_grey.png
 
 
 <ol start="5">
-    <li>Edit the script to set the correct icon paths:</li>
+    <li>Using whichever icon set you generate, edit the script to set the correct icon paths:</li>
 </ol>
 
 <pre><code>
@@ -147,6 +147,37 @@ ICON_RED        = "/home/username/path/icon_red.png"
 ICON_GREY       = "/home/username/path/icon_grey.png"
 ICON_RED_FLASH  = "/home/username/path/icon_red_flash.png"
 </code></pre>
+
+<ol start="6">
+    <li>Optionally, create a UPSMonitor.desktop file and place it in your Desktop folder:</li>
+</ol>
+
+<pre><code>
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=UPS Monitor
+Comment=Monitor APC UPS status and show GNOME top-bar icon
+Exec=python3 /home/tedm/local-programs/apc_ups_monitor.py &
+Icon=/home/tedm/local-programs/icon_green.png
+Terminal=false
+Categories=Utility;
+StartupNotify=false
+</code></pre>
+
+Set it executable:
+
+<pre><code>
+chmod +x ~/Desktop/UPSMonitor.desktop
+</code></pre>
+
+GNOME blocks desktop launchers by default until you approve them.
+Right-click the new icon on your desktop → Allow Launching.
+It will now appear as a clickable app icon.
+<p>
+The .desktop file can also be put in ~/.local/share/applications and/or ~/.config/autostart to be available in
+the Gnome app grid or autostart on login
+
 
 <h2>Usage</h2>
 <pre><code>chmod +x apc_ups_monitor.py
